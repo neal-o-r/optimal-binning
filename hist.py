@@ -9,7 +9,15 @@ if __name__ == '__main__':
         df['label'] = (df.species == 'setosa').astype(int)
         binner = OptimalBin()
 
-        x = df.sepal_length.values
+        x = df.sepal_width.values
         y = df.label.values
 
+        i = x.argsort()
+        x = x[i]
+        y = y[i]
+
         mu = binner.fit_transform(x, y)
+
+        plt.plot(x, y, '.')
+        plt.plot(x, mu, '.')
+        plt.show()

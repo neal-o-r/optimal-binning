@@ -15,46 +15,32 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 self.max_bins = max_bins
 
 
-        def _lnL_hogg(n_bins, x):
+        def _lnL(self, n_bins, x, y):
                 '''
-                Log likelihood from Hoog 2008
+                Log likelihood from Hogg 2008
                 '''
-                # this is arbitrary, should be fit
+                # this is totally arbitrary, should fit
                 a = 10
-
-                N, e = np.histogram(x, bins=n_bins)
+                N, e, _ = stats.binned_statistic(x, statistic='sum',
+                                values=y, bins=n_bins)
                 d = e[1] - e[0]
 
                 s = np.sum(N + a)
                 L = np.sum(N * np.log((N + a - 1) / (d * (s - 1))))
-
                 return L
 
 
-        def _lnL_knuth(self, m, x):
-                '''
-                Log likelihood from Knuth 2006
-                '''
-                N = len(x)
-                n = np.histogram(x, bins=m)[0]
-
-                p1 = N * np.log(m) + gammaln(m/2) - gammaln(N + m/2)
-                p2 = -m * gammaln(0.5) + np.sum(gammaln(n + 0.5))
-
-                return p1 + p2
-
-
-        def _optimal_bin_no(self, x):
+        def _optimal_bin_no(self, x, y):
                 bins = np.linspace(2, self.max_bins).astype(int)
                 ls = np.zeros_like(bins)
                 for i, b in enumerate(bins):
-                        ls[i] = self._lnL_knuth(b, x)
+                        ls[i] = self._lnL(b, x, y)
 
                 return bins[ls.argmax()]
 
 
         def fit(self, x, y):
-                self.bin_no = self._optimal_bin_no(x)
+                self.bin_no = self._optimal_bin_no(x, y)
                 self.bins = np.histogram(x, bins=self.bin_no)[1]
 
                 avg = lambda a: np.sum(a) / len(a) if len(a) else 0
@@ -65,10 +51,10 @@ class OptimalBin(BaseEstimator, TransformerMixin):
 
 
         def transform(self, x):
-                locs = np.digitize(x, self.bins, right=True)
-
+                locs = np.digitize(x, self.bins)
                 # np hist and digitize handle bins differently
                 # so this fudge is required (numpy/issues/9208)
+                locs -= 1
                 locs[locs == len(self.mu)] -= 1
                 return self.mu[locs]
 
