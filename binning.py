@@ -11,8 +11,9 @@ class OptimalBin(BaseEstimator, TransformerMixin):
         'optimal' bins
         '''
 
-        def __init__(self, max_bins=100):
+        def __init__(self, a='auto', max_bins=100):
                 self.max_bins = max_bins
+                self.a = a
 
 
         def _lnL(self, n_bins, x, y):
@@ -20,10 +21,14 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 Log likelihood from Hogg 2008
                 '''
                 # this is totally arbitrary, should fit
-                a = np.mean(y)
+                a = np.mean(y) if self.a is 'auto' else self.a
+
                 N, e, _ = stats.binned_statistic(x, statistic='sum',
                                 values=y, bins=n_bins)
                 d = e[1] - e[0]
+
+                if any((N + a) < 1):
+                        return np.nan
 
                 s = np.sum(N + a)
                 L = np.sum(N * np.log((N + a - 1) / (d * (s - 1))))
@@ -33,11 +38,14 @@ class OptimalBin(BaseEstimator, TransformerMixin):
 
         def _optimal_bin_no(self, x, y):
                 bins = np.linspace(2, self.max_bins).astype(int)
-                ls = np.zeros(len(bins))
-                for i, b in enumerate(bins):
-                        ls[i] = self._lnL(b, x, y)
+                ls = []
+                for b in bins:
+                        i = self._lnL(b, x, y)
+                        if np.isnan(i):
+                                break
+                        ls.append(i)
 
-                return bins[np.nanargmax(ls)]
+                return bins[np.argmax(ls)]
 
 
         def fit(self, x, y):
