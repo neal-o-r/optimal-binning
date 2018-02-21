@@ -20,23 +20,24 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 Log likelihood from Hogg 2008
                 '''
                 # this is totally arbitrary, should fit
-                a = 10
+                a = np.mean(y)
                 N, e, _ = stats.binned_statistic(x, statistic='sum',
                                 values=y, bins=n_bins)
                 d = e[1] - e[0]
 
                 s = np.sum(N + a)
                 L = np.sum(N * np.log((N + a - 1) / (d * (s - 1))))
+
                 return L
 
 
         def _optimal_bin_no(self, x, y):
                 bins = np.linspace(2, self.max_bins).astype(int)
-                ls = np.zeros_like(bins)
+                ls = np.zeros(len(bins))
                 for i, b in enumerate(bins):
                         ls[i] = self._lnL(b, x, y)
 
-                return bins[ls.argmax()]
+                return bins[np.nanargmax(ls)]
 
 
         def fit(self, x, y):
