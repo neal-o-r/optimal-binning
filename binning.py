@@ -1,8 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy import stats
-from scipy.special import gammaln
-from scipy import optimize as opt
+
 
 class OptimalBin(BaseEstimator, TransformerMixin):
         '''
@@ -14,12 +13,12 @@ class OptimalBin(BaseEstimator, TransformerMixin):
         def __init__(self, a=10, max_bins=100, method='pdf'):
                 '''
                 Init with 3 args:
-                        a : smoothing factor
+                        a        : smoothing factor
                         max_bins : most bins that will be tested
-                        method : pdf will return a normalised pdf
-                                        - sum in bin/total sum
-                                 avg will return
-                                        - mean in bin
+                        method   : pdf will return a normalised pdf
+                                        - sum y in bin/total sum y
+                                   avg will return
+                                        - mean of y bin
                 '''
                 assert (method is 'pdf' or
                         method is 'avg')
@@ -33,7 +32,6 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 '''
                 Log likelihood from Hogg 2008
                 '''
-
                 N, e, _ = stats.binned_statistic(x, statistic='sum',
                                 values=y, bins=n_bins)
                 d = e[1] - e[0]
@@ -72,11 +70,10 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 then aggregate the labels accordingly and populate
                 self.mu
                 '''
-
                 self.bin_no = self._optimal_bin_no(x, y)
                 self.bins = np.histogram(x, bins=self.bin_no)[1]
 
-                avg = lambda a: np.sum(a) / len(y) if len(x) else 0
+                avg = lambda a: np.sum(a) / len(a) if len(a) else 0
                 pdf = lambda a: np.sum(a) / np.sum(y)
 
                 if self.method is 'avg':
@@ -86,7 +83,6 @@ class OptimalBin(BaseEstimator, TransformerMixin):
 
                 self.mu = stats.binned_statistic(x, statistic=agg,
                                 values=y, bins=self.bins)[0]
-
                 return self
 
 
@@ -95,7 +91,6 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 get the bin that each x fell into and return
                 the mu in corresponding to that bin
                 '''
-
                 locs = np.digitize(x, self.bins)
                 # np hist and digitize handle bins differently
                 # so this fudge is required (numpy/issues/9208)
@@ -107,4 +102,3 @@ class OptimalBin(BaseEstimator, TransformerMixin):
         def fit_transform(self, x, y):
                 self.fit(x, y)
                 return self.transform(x)
-
