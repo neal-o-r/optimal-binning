@@ -1,8 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy import stats
-from scipy.special import gammaln
-from scipy import optimize as opt
+
 
 class OptimalBin(BaseEstimator, TransformerMixin):
         '''
