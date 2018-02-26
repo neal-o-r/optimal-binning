@@ -8,9 +8,6 @@ class RecursiveOptimalBin(BaseEstimator, TransformerMixin):
         Take in a 1d array and a set of binary labels (x, y)
         and return the mean y in each of a set of
         'optimal' bins
-        This is done by setting up a number of evenly spaced bins
-        and recursively merging adjacent bins until we begin
-        to overfit
         '''
         def __init__(self, a=10, max_bins=100, method='pdf'):
                 '''
@@ -34,6 +31,7 @@ class RecursiveOptimalBin(BaseEstimator, TransformerMixin):
                 '''
                 Log likelihood from Hogg 2008
                 '''
+
                 N, e, _ = stats.binned_statistic(x, statistic='sum',
                                 values=y, bins=bins)
 
@@ -56,16 +54,16 @@ class RecursiveOptimalBin(BaseEstimator, TransformerMixin):
                 log-likelihood.
                 '''
                 # make 100 even bins
-                bins = list((x.max() - x.min() / self.max_bins) *
-                                np.linspace(0, 1, self.max_bins + 1) + x.min())
+                bins = list(np.histogram(x, bins=self.max_bins)[1])
 
                 # get the log L for that, set up loop variables
                 L = self._lnL(bins, x, y)
-                L_new = np.inf
+                L_new = L
                 bins_new = bins
-                while (L_new > L) and (len(bins_new) > 2):
+                while (L_new >= L) and (len(bins_new) > 2):
                         # so long as the lgL is increasing, and we have
                         # at least 2 bin edges (start and end)
+                        L = L_new
                         bins = bins_new
                         Ls = []
                         for i in range(1, len(bins)-1):
@@ -116,4 +114,5 @@ class RecursiveOptimalBin(BaseEstimator, TransformerMixin):
         def fit_transform(self, x, y):
                 self.fit(x, y)
                 return self.transform(x)
+
 
