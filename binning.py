@@ -15,14 +15,7 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 Init with 3 args:
                         a        : smoothing factor
                         max_bins : most bins that will be tested
-                        method   : pdf will return a normalised pdf
-                                        - sum y in bin/total sum y
-                                   avg will return
-                                        - mean of y bin
                 """
-        assert method is "pdf" or method is "avg"
-
-        self.method = method
         self.max_bins = max_bins
         self.a = a
 
@@ -31,7 +24,7 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 Log likelihood from Hogg 2008
                 """
         N, e, _ = stats.binned_statistic(x, statistic="sum", values=y, bins=n_bins)
-        d = e[1] - e[0]
+        d = abs(e[0] - e[1])
 
         if any((N + self.a) < 1):
             return np.nan
@@ -56,7 +49,6 @@ class OptimalBin(BaseEstimator, TransformerMixin):
                 break
 
             ls.append(l)
-
         return bins[np.argmax(ls)]
 
     def fit(self, x, y):
@@ -68,15 +60,8 @@ class OptimalBin(BaseEstimator, TransformerMixin):
         self.bin_no = self._optimal_bin_no(x, y)
         self.bins = np.histogram(x, bins=self.bin_no)[1]
 
-        avg = lambda a: np.sum(a) / len(a) if len(a) else 0
         pdf = lambda a: np.sum(a) / np.sum(y)
-
-        if self.method is "avg":
-            agg = avg
-        else:
-            agg = pdf
-
-        self.mu = stats.binned_statistic(x, statistic=agg, values=y, bins=self.bins)[0]
+        self.mu = stats.binned_statistic(x, statistic=pdf, values=y, bins=self.bins)[0]
         return self
 
     def transform(self, x):
@@ -94,3 +79,30 @@ class OptimalBin(BaseEstimator, TransformerMixin):
     def fit_transform(self, x, y):
         self.fit(x, y)
         return self.transform(x)
+
+
+if __name__ == "__main__":
+
+    from scipy.stats import norm
+    import matplotlib.pyplot as plt
+    import numpy as np; np.random.seed(123)
+
+    binner = OptimalBin()
+
+    x = np.concatenate([stats.cauchy(-5, 1.8).rvs(500),
+                    stats.cauchy(-4, 0.8).rvs(2000),
+                    stats.cauchy(-1, 0.3).rvs(500),
+                    stats.cauchy(2, 0.8).rvs(1000),
+                    stats.cauchy(4, 1.5).rvs(500)])
+
+    # truncate values to a reasonable range
+    x = x[(x > -15) & (x < 15)]
+
+    y = np.ones_like(x)
+
+    plt.hist(x, density=True, bins=200, histtype="stepfilled", alpha=0.2)
+    binner.fit(x, y)
+
+    plt.hist(x, density=True, bins=binner.bins, histtype="step")
+
+    plt.show()
