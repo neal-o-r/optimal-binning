@@ -5,6 +5,6 @@ Routine to choose the optimal number of equally spaced bins for use in a histogr
 There are three versions:
   * ```binning.py```: This works out the optimal number of **equally** spaced bins -- seems to work well.
   * ```recursive_binning.py```: Start with a given number of equally spaced bins, recursively merge adjacent bins so long as the log likelihood increases.
-  * ``double_recursive_binning.py```: Start with 1 bin and add bins left to right so long as it increases the likelihood, once these have been added the use the recursive binning above to prune back.
+  * ```double_recursive_binning.py```: Start with 1 bin and add bins left to right so long as it increases the likelihood, once these have been added the use the recursive binning above to prune back.
 
 Both the recursive methods seem to not work perfectly, they create too many bins. Neither of the algorithms I've got here do exactly what I want.
