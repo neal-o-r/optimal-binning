@@ -14,7 +14,7 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
     def __init__(self, a=10, max_bins=100):
         """
                 Init with 3 args:
-                        a        : smoothing factor
+                        a        : smoothing factor - a good factor is ~number of data points
                         max_bins : most bins that will be tested
                 """
         self.max_bins = max_bins
@@ -30,7 +30,7 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
         d = np.diff(e)
 
         if any((N + self.a) < 1):
-            return np.nan
+            return -np.inf
 
         s = np.sum(N + self.a)
         L = np.sum(N * np.log((N + self.a - 1) / (d * (s - 1))))
@@ -56,36 +56,30 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
                 test_bins = bins[:i] + bins[i + 1 :]
                 Ls.append(self._lnL(test_bins, x, y))
 
-            L_new = np.nanmax(Ls)
-            L_ind = 1 + np.nanargmax(Ls)
+            L_new = np.max(Ls)
+            L_ind = 1 + np.argmax(Ls)
             bins_new = bins[:L_ind] + bins[L_ind + 1 :]
 
         return bins
 
     def _grow_bins(self, x, y):
-        """
-        Find the optimal binning for a data set
-        Begin with 1 bin, and keep adding bins
-        so long as it increases the log-likelihood.
-        """
-        # make even bins
+        # make one big bin
         bins = np.histogram(x, bins=1)[1]
 
-        grids = set(np.linspace(np.min(x), np.max(x), self.max_bins))
+        # where the grid points are
+        grid = set(np.linspace(np.min(x), np.max(x), self.max_bins))
 
-        # get the log L for that, set up loop variables
         L = self._lnL(bins, x, y)
-        for g in grids:
+        for g in grid:
             if self._lnL(self._add_bin(g, bins), x, y) > L:
                 bins = self._add_bin(g, bins)
                 L = self._lnL(bins, x, y)
 
-        return bins
+        return list(bins)
 
     def _optimal_binning(self, x, y):
-
         bins = self._grow_bins(x, y)
-        return self._prune_bins(list(bins), x, y)
+        return self._prune_bins(bins, x, y)
 
     def fit(self, x, y):
         """
@@ -119,13 +113,10 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
 
 if __name__ == "__main__":
 
-    from scipy.stats import norm
     import matplotlib.pyplot as plt
-    import numpy as np
 
     np.random.seed(123)
 
-    binner = DoubleRecursiveOptimalBin(max_bins=200)
     x = np.concatenate(
         [
             stats.cauchy(-5, 1.8).rvs(500),
@@ -135,6 +126,7 @@ if __name__ == "__main__":
             stats.cauchy(4, 1.5).rvs(500),
         ]
     )
+    binner = DoubleRecursiveOptimalBin(a=10 ** int(np.log10(len(x))))
 
     # truncate values to a reasonable range
     x = x[(x > -15) & (x < 15)]
