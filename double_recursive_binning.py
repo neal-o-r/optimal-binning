@@ -14,7 +14,7 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
     def __init__(self, a=10, max_bins=100):
         """
                 Init with 3 args:
-                        a        : smoothing factor
+                        a        : smoothing factor - a good factor is ~number of data points
                         max_bins : most bins that will be tested
                 """
         self.max_bins = max_bins
