@@ -1,6 +1,6 @@
 # Optimal Binning
 
-Routine to choose the optimal number of equally spaced bins for use in a histogram. Two methods are used, both based on [Hogg](https://arxiv.org/abs/0807.4820). This is packaged into a scikit transformer that takes a vector *x* and a binary label *y*, and once fit will return, for a given *x*, the mean *y* in the corresponding optimised bin.
+Routine to choose the optimal number of non-equally spaced bins for use in a histogram. Two methods are used, both based on [Hogg](https://arxiv.org/abs/0807.4820). This is packaged into a scikit transformer that takes a vector *x* and a binary label *y*, and once fit will return, for a given *x*, the mean *y* in the corresponding optimised bin.
 
 There are three versions:
   * ```binning.py```: This works out the optimal number of **equally** spaced bins -- seems to work well.
