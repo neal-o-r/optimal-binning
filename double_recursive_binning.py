@@ -129,7 +129,7 @@ if __name__ == "__main__":
             stats.cauchy(4, 1.5).rvs(500),
         ]
     )
-    binner = DoubleRecursiveOptimalBin(a=10 ** int(np.log10(len(x))))
+    binner = DoubleRecursiveOptimalBin()
 
     # truncate values to a reasonable range
     x = x[(x > -15) & (x < 15)]
