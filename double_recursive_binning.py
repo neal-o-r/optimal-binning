@@ -11,11 +11,13 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
         where possible -- and then pruning those bins back
         """
 
-    def __init__(self, a=10, max_bins=100):
+    def __init__(self, a=0.1, max_bins=100):
         """
-                Init with 3 args:
-                        a        : smoothing factor - a good factor is ~number of data points
-                        max_bins : most bins that will be tested
+                a        : smoothing factor - this is used to scale
+                            the number of data-points,
+                            a good factor is ~fraction of the points you
+                            expect to be in the fullest bin
+                max_bins : most bins that will be tested
                 """
         self.max_bins = max_bins
         self.a = a
@@ -32,8 +34,9 @@ class DoubleRecursiveOptimalBin(BaseEstimator, TransformerMixin):
         if any((N + self.a) < 1):
             return -np.inf
 
-        s = np.sum(N + self.a)
-        L = np.sum(N * np.log((N + self.a - 1) / (d * (s - 1))))
+        alpha = self.a * len(x)
+        s = np.sum(N + alpha)
+        L = np.sum(N * np.log((N + alpha - 1) / (d * (s - 1))))
 
         return L
 
